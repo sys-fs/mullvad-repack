@@ -1,0 +1,13 @@
+#!/sbin/openrc-run
+
+name="mullvad-daemon"
+description="Mullvad VPN daemon"
+supervisor="supervise-daemon"
+command="/usr/bin/mullvad-daemon"
+command_args="-v --disable-stdout-timestamps"
+supervise_daemon_args=' -e MULLVAD_RESOURCE_DIR="/opt/Mullvad VPN/resources/"'
+
+depend() {
+	after mullvad-early-boot-blocking NetworkManager resolvconf
+	before network-online 
+}

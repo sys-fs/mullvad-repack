@@ -1,0 +1,10 @@
+#!/sbin/openrc-run
+
+name="mullvad-early-boot-blocking"
+description="Mullvad early boot network blocker"
+command="/usr/bin/mullvad-daemon"
+command_args="--initialize-early-boot-firewall"
+
+depend() {
+	before basic mullvad-daemon 
+}
