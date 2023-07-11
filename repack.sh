@@ -2,12 +2,18 @@
 set -eo pipefail
 
 if [ -z "$1" ]; then
-    echo "usage: repack.sh version"
-    exit 1
+	echo "usage: repack.sh version"
+	exit 1
 fi
 set -u
 
 version="$1"
+
+if [ -x /sbin/openrc-run ]; then
+	cd openrc
+else;
+	cd sysvinit
+fi
 
 wget -nc "https://github.com/mullvad/mullvadvpn-app/releases/download/${version}/MullvadVPN-${version}_amd64.deb"
 
@@ -27,4 +33,4 @@ patch repack/DEBIAN/preinst < preinst.patch
 patch repack/DEBIAN/postinst < postinst.patch
 patch repack/DEBIAN/prerm < prerm.patch
 
-dpkg-deb -b repack "mullvad-${version}-repack.deb"
+dpkg-deb -b repack "../mullvad-${version}-repack.deb"

@@ -1,0 +1,13 @@
+--- postinst	2022-10-14 11:36:49.000000000 +0100
++++ /home/tfm/mullvad-repack/postinst	2022-11-13 11:34:59.536140880 +0000
+@@ -3,6 +3,7 @@
+ 
+ chmod u+s "/usr/bin/mullvad-exclude"
+ 
+-systemctl enable "/usr/lib/systemd/system/mullvad-daemon.service"
+-systemctl start mullvad-daemon.service
+-systemctl enable "/usr/lib/systemd/system/mullvad-early-boot-blocking.service"
++update-rc.d mullvad-daemon defaults
++service mullvad-daemon start
++update-rc.d mullvad-early-boot-blocking defaults
++
