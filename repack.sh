@@ -11,9 +11,11 @@ version="$1"
 
 if [ -x /sbin/openrc-run ]; then
 	cd openrc
-else;
+else
 	cd sysvinit
 fi
+
+rm -rf repack
 
 wget -nc "https://github.com/mullvad/mullvadvpn-app/releases/download/${version}/MullvadVPN-${version}_amd64.deb"
 
@@ -29,8 +31,8 @@ cp mullvad-daemon repack/etc/init.d
 cp mullvad-early-boot-blocking repack/etc/init.d
 
 # Patch the packaging scripts.
-patch repack/DEBIAN/preinst < preinst.patch
-patch repack/DEBIAN/postinst < postinst.patch
-patch repack/DEBIAN/prerm < prerm.patch
+patch -l repack/DEBIAN/preinst < preinst.patch
+patch -l repack/DEBIAN/postinst < postinst.patch
+patch -l repack/DEBIAN/prerm < prerm.patch
 
 dpkg-deb -b repack "../mullvad-${version}-repack.deb"

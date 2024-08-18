@@ -1,13 +1,15 @@
---- postinst	2022-10-14 11:36:49.000000000 +0100
-+++ /home/tfm/mullvad-repack/postinst	2022-11-13 11:34:59.536140880 +0000
-@@ -3,6 +3,7 @@
+--- postinst	2024-08-18 11:51:43.596999869 +0100
++++ postinst-sysv	2024-08-18 11:51:38.224955079 +0100
+@@ -3,9 +3,9 @@
  
  chmod u+s "/usr/bin/mullvad-exclude"
  
 -systemctl enable "/usr/lib/systemd/system/mullvad-daemon.service"
--systemctl start mullvad-daemon.service
+-systemctl start mullvad-daemon.service || echo "Failed to start mullvad-daemon.service"
 -systemctl enable "/usr/lib/systemd/system/mullvad-early-boot-blocking.service"
 +update-rc.d mullvad-daemon defaults
-+service mullvad-daemon start
++service mullvad-daemon start || echo "Failed to start mullvad-daemon"
 +update-rc.d mullvad-early-boot-blocking defaults
-+
+ 
+ # return 0 if version $1 is greater than or equal to $2
+ function version_is_ge {

@@ -1,10 +1,10 @@
---- preinst	2022-10-14 11:36:49.000000000 +0100
-+++ /home/tfm/mullvad-repack/preinst	2022-11-13 11:37:22.860145083 +0000
-@@ -1,15 +1,11 @@
+--- preinst	2024-07-23 15:51:35.000000000 +0100
++++ preinst-sysv	2024-08-18 11:56:01.489150086 +0100
+@@ -1,15 +1,13 @@
  #!/usr/bin/env bash
  set -eu
- 
--if which systemctl &> /dev/null; then
+
+-if which systemctl &> /dev/null && systemctl is-system-running | grep -vq offline &> /dev/null; then
 -    if systemctl status mullvad-daemon &> /dev/null; then
 -        /opt/Mullvad\ VPN/resources/mullvad-setup prepare-restart || true
 -        systemctl stop mullvad-daemon.service
@@ -14,10 +14,12 @@
 -            || echo "Failed to copy old daemon log"
 -    fi
 +if service mullvad-daemon status &> /dev/null; then
-+    /opt/Mullvad\ VPN/resources/mullvad-setp prepare-restart || true
++    /opt/Mullvad\ VPN/resources/mullvad-setup prepare-restart || true
 +    service mullvad-daemon stop
 +    update-rc.d mullvad-daemon disable
 +    update-rc.d mullvad-early-boot-blocking disable || true
++    cp /var/log/mullvad-vpn/daemon.log /var/log/mullvad-vpn/old-install-daemon.log \
++        || echo "Failed to copy old daemon log"
  fi
- 
+
  # This can be removed when 2022.4 is unsupported. That version is the last version where
