@@ -1,0 +1,17 @@
+--- prerm	2022-10-14 11:36:49.000000000 +0100
++++ /home/tfm/mullvad-repack/prerm	2022-11-13 11:34:53.472140703 +0000
+@@ -21,10 +21,10 @@
+ fi
+ 
+ # the user might've disabled or stopped the service themselves already
+-systemctl stop mullvad-daemon.service || true
+-systemctl disable mullvad-daemon.service || true
+-systemctl stop mullvad-early-boot-blocking.service || true
+-systemctl disable mullvad-early-boot-blocking.service || true
++sv down mullvad-daemon || true
++sv down mullvad-early-boot-blocking || true
++rm -f /etc/service/mullvad-daemon /etc/service/mullvad-early-boot-blocking
++rm -r /etc/sv/mullvad-daemon /etc/sv/mullvad-early-boot-blocking
+ 
+ /opt/Mullvad\ VPN/resources/mullvad-setup reset-firewall || echo "Failed to reset firewall"
+ /opt/Mullvad\ VPN/resources/mullvad-setup remove-device || echo "Failed to remove device from account"

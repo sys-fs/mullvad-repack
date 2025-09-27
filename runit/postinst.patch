@@ -1,0 +1,18 @@
+--- postinst	2024-07-23 15:51:35.000000000 +0100
++++ postinst-openrc	2024-08-18 13:24:04.961013819 +0100
+@@ -3,9 +3,12 @@
+ 
+ chmod u+s "/usr/bin/mullvad-exclude"
+ 
+-systemctl enable "/usr/lib/systemd/system/mullvad-daemon.service"
+-systemctl start mullvad-daemon.service || echo "Failed to start mullvad-daemon.service"
+-systemctl enable "/usr/lib/systemd/system/mullvad-early-boot-blocking.service"
++ln -sf /etc/sv/mullvad-daemon /etc/service
++while : 
++do
++	[ -e /etc/service/mullvad-daemon/supervise/ok ] && break
++done
++sv up mullvad-daemon || echo "Failed to start mullvad-daemon"
+ 
+ # return 0 if version $1 is greater than or equal to $2
+ function version_is_ge {
