@@ -37,6 +37,7 @@ fi
 
 mkdir -p repack/etc/cron.d
 cp mullvad-early-boot-blocking repack/etc/cron.d
+chown root: repack/etc/cron.d/mullvad-early-boot-blocking
 
 # Patch the packaging scripts.
 patch -l repack/DEBIAN/preinst < "${init_system}/preinst.patch"
