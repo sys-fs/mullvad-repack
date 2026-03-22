@@ -14,7 +14,7 @@
 -            || echo "Failed to copy old daemon log"
 -    fi
 +if service mullvad-daemon status &> /dev/null; then
-+    /opt/Mullvad\ VPN/resources/mullvad-setp prepare-restart || true
++    /opt/Mullvad\ VPN/resources/mullvad-setup prepare-restart || true
 +    service mullvad-daemon stop
 +    rc-update del mullvad-daemon default
 +    rc-update del mullvad-early-boot-blocking default || true
