@@ -10,5 +10,5 @@
 +update-rc.d mullvad-daemon defaults
 +service mullvad-daemon start || echo "Failed to start mullvad-daemon"
 
-# Check if the system supports a new-enough AppArmor version.
-function supported_apparmor() {
+ # return 0 if version $1 is greater than or equal to $2
+ function version_is_ge {
