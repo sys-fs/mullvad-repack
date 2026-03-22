@@ -18,10 +18,16 @@ fi
 
 rm -rf repack
 
-wget -nc "https://github.com/mullvad/mullvadvpn-app/releases/download/${version}/MullvadVPN-${version}_amd64.deb"
+case "$version" in
+	*".deb")
+		file="$version";;
+	*)
+		file="MullvadVPN-${version}_$(dpkg --print-architecture).deb"
+		wget -nc "https://github.com/mullvad/mullvadvpn-app/releases/download/${version}/${file}";;
+esac
 
-dpkg-deb -x "MullvadVPN-${version}_amd64.deb" repack
-dpkg-deb -e "MullvadVPN-${version}_amd64.deb" repack/DEBIAN
+dpkg-deb -x "$file" repack
+dpkg-deb -e "$file" repack/DEBIAN
 
 # The only things in here are systemd units.
 rm -rf repack/usr/lib
@@ -44,4 +50,4 @@ patch -l repack/DEBIAN/preinst < "${init_system}/preinst.patch"
 patch -l repack/DEBIAN/postinst < "${init_system}/postinst.patch"
 patch -l repack/DEBIAN/prerm < "${init_system}/prerm.patch"
 
-dpkg-deb -b repack "mullvad-${version}-repack.deb"
+dpkg-deb -b repack "${file%".deb"}-repack.deb"
