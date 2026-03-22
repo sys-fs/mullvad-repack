@@ -44,11 +44,10 @@ fi
 mkdir -p repack/etc/cron.d
 cp mullvad-early-boot-blocking repack/etc/cron.d
 chmod go-w repack/etc/cron.d/mullvad-early-boot-blocking
-sudo chown root: repack/etc/cron.d/mullvad-early-boot-blocking
 
 # Patch the packaging scripts.
 patch -l repack/DEBIAN/preinst < "${init_system}/preinst.patch"
 patch -l repack/DEBIAN/postinst < "${init_system}/postinst.patch"
 patch -l repack/DEBIAN/prerm < "${init_system}/prerm.patch"
 
-dpkg-deb -b repack "${file%".deb"}-repack.deb"
+dpkg-deb --root-owner-group -b repack "${file%".deb"}-repack.deb"
