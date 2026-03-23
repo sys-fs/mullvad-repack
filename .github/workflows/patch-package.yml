@@ -29,4 +29,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: package
-          path: Mullvad-*_repack.deb
+          path: MullvadVPN-*_repack.deb
