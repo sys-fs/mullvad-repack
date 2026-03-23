@@ -9,7 +9,7 @@ on Devuan. The sysvinit scripts can be used on openrc systems.
 ./repack.sh 2026.1
 
 # Patch a local file.
-./repace.sh MullvadVPN-2026.1_amd64.deb
+./repack.sh MullvadVPN-2026.1_amd64.deb
 
 # Fetch 2026.1 for a different arch (e.g. arm64 if you're on amd64).
 ./repack.sh 2026.1 arm64
