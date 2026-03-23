@@ -1,12 +1,15 @@
 name: Patch Mullvad VPN package
 
 on:
-  workflow_dispatch:
-    inputs:
-      mullvad_version:
-        description: The version of Mullvad VPN to repackage.
-        type: string
-        required: true
+  # workflow_dispatch:
+  #   inputs:
+  #     mullvad_version:
+  #       description: The version of Mullvad VPN to repackage.
+  #       type: string
+  #       required: true
+  push:
+    branches:
+      - 6-create-package-repository
 
 jobs:
   patch-amd64:
@@ -22,7 +25,7 @@ jobs:
 
       - name: Patch package
         run: |
-          ./repack.sh ${{ inputs.mullvad_version }}
+          ./repack.sh 2026.1
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
