@@ -2,12 +2,19 @@
 set -eo pipefail
 
 if [ -z "$1" ]; then
-    echo "usage: repack.sh version"
+    echo "usage: repack.sh version [arch]"
     exit 1
 fi
-set -u
 
 version="$1"
+
+if [ -z "$2" ]; then
+    arch=$(dpkg --print-architecture)
+else
+    arch="$2"
+fi
+
+set -u
 
 rm -rf repack
 
@@ -16,7 +23,7 @@ case "$version" in
 	file="$version"
 	;;
     *)
-	file="MullvadVPN-${version}_$(dpkg --print-architecture).deb"
+	file="MullvadVPN-${version}_${arch}.deb"
 	wget -nc "https://github.com/mullvad/mullvadvpn-app/releases/download/${version}/${file}"
 	;;
 esac
@@ -28,11 +35,10 @@ dpkg-deb -e "$file" repack/DEBIAN
 rm -rf repack/usr/lib
 
 # Add init scripts.
-mkdir -p repack/etc/{cron.d,init.d,sv}
-cp -r mullvad-daemon-runit repack/etc/sv/mullvad-daemon
-cp mullvad-daemon repack/etc/init.d
-cp mullvad-early-boot-blocking repack/etc/cron.d
-chmod go-w repack/etc/cron.d/mullvad-early-boot-blocking
+mkdir -p repack/etc/{init.d,sv}
+cp -r runit/mullvad-daemon repack/etc/sv/mullvad-daemon
+cp sysv/mullvad-daemon repack/etc/init.d
+cp sysv/mullvad-early-boot-blocking repack/etc/init.d
 
 # Patch the packaging scripts.
 patch -l repack/DEBIAN/preinst preinst.patch

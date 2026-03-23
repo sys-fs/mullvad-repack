@@ -1,4 +1,4 @@
-22,25c22,28
+22,25c22,29
 < systemctl stop mullvad-daemon.service || true
 < systemctl disable mullvad-daemon.service || true
 < systemctl stop mullvad-early-boot-blocking.service || true
@@ -10,4 +10,5 @@
 > else
 >     service mullvad-daemon stop || true
 >     update-rc.d mullvad-daemon disable || true
+>     update-rc.d mullvad-early-boot-blocking disable || true
 > fi

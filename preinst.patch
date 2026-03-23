@@ -1,4 +1,4 @@
-4,10c4,17
+4,10c4,18
 < if which systemctl &> /dev/null && systemctl is-system-running | grep -vq offline &> /dev/null; then
 <     if systemctl status mullvad-daemon &> /dev/null; then
 <         /opt/Mullvad\ VPN/resources/mullvad-setup prepare-restart || true
@@ -20,4 +20,5 @@
 > 	/opt/Mullvad\ VPN/resources/mullvad-setup prepare-restart || true
 > 	service mullvad-daemon stop
 > 	update-rc.d mullvad-daemon disable
+> 	update-rc.d mullvad-early-boot-blocking disable || true
 > 	cp /var/log/mullvad-vpn/daemon.log /var/log/mullvad-vpn/old-install-daemon.log \

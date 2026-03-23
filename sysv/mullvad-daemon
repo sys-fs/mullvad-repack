@@ -1,7 +1,7 @@
 #!/bin/sh
 ### BEGIN INIT INFO
 # Provides:		mullvad-daemon
-# Required-Start:	$network
+# Required-Start:	$network mullvad-early-boot-blocking
 # Required-Stop:	$network
 # Should-Start:
 # Should-Stop:
@@ -64,4 +64,3 @@ case "$1" in
 		exit 3
 		;;
 esac
-

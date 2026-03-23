@@ -1,13 +1,24 @@
 # mullvad-repack
 This script replaces the systemd units included in the original Mullvad VPN
-packages with sysvinit or OpenRC scripts (depending on which is in use) so
-that the Mullvad app can be used on Devuan.
-
-I've found that after upgrading the package I need to reconnect to Mullvad, so
-you may need to run `mullvad reconnect` after upgrading.
+packages with sysvinit and runit scripts so that the Mullvad app can be used
+on Devuan. The sysvinit scripts can be used on openrc systems.
 
 ## Usage
 ```sh
-# ./repack.sh <mullvad-version>
+# Fetch 2026.1 from GitHub and patch it.
 ./repack.sh 2026.1
+
+# Patch a local file.
+./repace.sh MullvadVPN-2026.1_amd64.deb
+
+# Fetch 2026.1 for a different arch (e.g. arm64 if you're on amd64).
+./repack.sh 2026.1 arm64
 ```
+
+## Known issues
+When installing the package on a runit system it says that mullvad-daemon fails
+to start. Despite this message, the daemon is actually started and running
+fine.
+
+After upgrading the package you may need to reconnect to mullvad using `mullvad
+reconnect`.
