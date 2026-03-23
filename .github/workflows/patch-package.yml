@@ -1,0 +1,34 @@
+name: Patch Mullvad VPN package
+
+on:
+  workflow_dispatch:
+    inputs:
+      mullvad_version:
+        description: The version of Mullvad VPN to repackage.
+        type: string
+        required: true
+
+jobs:
+  patch-amd64:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt update
+          sudo apt install patch
+
+      - name: Patch package
+        run: |
+          ./repack.sh ${{ inputs.mullvad_version }} amd64
+          ./repack.sh ${{ inputs.mullvad_version }} arm64
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: package
+          path: Mullvad_*_repack.deb
+
+  patch-

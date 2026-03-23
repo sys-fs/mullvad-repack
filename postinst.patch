@@ -1,0 +1,17 @@
+6,8c6,17
+< systemctl enable "/usr/lib/systemd/system/mullvad-daemon.service"
+< systemctl start mullvad-daemon.service || echo "Failed to start mullvad-daemon.service"
+< systemctl enable "/usr/lib/systemd/system/mullvad-early-boot-blocking.service"
+---
+> if [ -x /usr/bin/sv ]; then
+>     ln -sf /etc/sv/mullvad-daemon /etc/service
+>     while :
+>     do
+> 	[ -e /etc/service/mullvad-daemon/supervise/ok ] && break
+>     done
+>     sv start mullvad-daemon || echo "Failed to start mullvad-daemon"
+> else
+>     update-rc.d mullvad-early-boot-blocking defaults
+>     update-rc.d mullvad-daemon defaults
+>     service mullvad-daemon start || echo "Failed to start mullvad-daemon"
+> fi
