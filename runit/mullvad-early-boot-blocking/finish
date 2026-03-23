@@ -1,4 +1,0 @@
-#!/bin/sh
-set -e
-
-exec /lib/runit/finish-exec "$@"

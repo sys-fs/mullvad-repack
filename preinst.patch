@@ -1,0 +1,23 @@
+4,10c4,17
+< if which systemctl &> /dev/null && systemctl is-system-running | grep -vq offline &> /dev/null; then
+<     if systemctl status mullvad-daemon &> /dev/null; then
+<         /opt/Mullvad\ VPN/resources/mullvad-setup prepare-restart || true
+<         systemctl stop mullvad-daemon.service
+<         systemctl disable mullvad-daemon.service
+<         systemctl disable mullvad-early-boot-blocking.service || true
+<         cp /var/log/mullvad-vpn/daemon.log /var/log/mullvad-vpn/old-install-daemon.log \
+---
+> if which sv &> /dev/null; then
+>     if sv status mullvad-daemon &> /dev/null; then
+> 	/opt/Mullvad\ VPN/resources/mullvad-setup prepare-restart || true
+> 	sv down mullvad-daemon
+> 	rm -f /etc/service/mullvad-daemon
+> 	cp /var/log/mullvad-vpn/daemon.log /var/log/mullvad-vpn/old-install-daemon.log \
+>             || echo "Failed to copy old daemon log"
+>     fi
+> else
+>     if service mullvad-daemon states &> /dev/null; then
+> 	/opt/Mullvad\ VPN/resources/mullvad-setup prepare-restart || true
+> 	service mullvad-daemon stop
+> 	update-rc.d mullvad-daemon disable
+> 	cp /var/log/mullvad-vpn/daemon.log /var/log/mullvad-vpn/old-install-daemon.log \
