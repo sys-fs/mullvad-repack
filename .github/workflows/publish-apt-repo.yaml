@@ -1,0 +1,167 @@
+name: Publish APT repository
+
+on:
+  schedule:
+    # Daily. Adjust to taste; cron is UTC.
+    - cron: '17 6 * * *'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Mullvad version to build (blank = latest upstream release)'
+        required: false
+        default: ''
+      force:
+        description: 'Rebuild even if this version is already published'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+env:
+  PAGES_URL: https://sys-fs.github.io/mullvad-repack
+  ORIGIN: mullvad-repack
+
+  ARCHES: amd64 arm64
+  SUITE: stable
+  COMPONENT: main
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+      build: ${{ steps.v.outputs.build }}
+    steps:
+      - name: Resolve upstream version and decide whether to build
+        id: v
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          FORCE: ${{ inputs.force }}
+        run: |
+          set -euo pipefail
+
+          version="${INPUT_VERSION:-}"
+          if [ -z "$version" ]; then
+            version=$(curl -fsSL \
+              https://api.github.com/repos/mullvad/mullvadvpn-app/releases/latest \
+              | jq -r .tag_name)
+          fi
+          echo "Upstream version: $version"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+          url="$PAGES_URL/pool/$COMPONENT/m/mullvad-vpn/mullvad-vpn_${version}+devuan1_amd64.deb"
+          if [ "$FORCE" != "true" ] && curl -fsI "$url" >/dev/null 2>&1; then
+            echo "Already published; nothing to do."
+            echo "build=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "build=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  publish:
+    needs: check
+    if: needs.check.outputs.build == 'true'
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    env:
+      VERSION: ${{ needs.check.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends apt-utils gnupg patch wget
+
+      - name: Repack for each architecture
+        run: |
+          set -euo pipefail
+          mkdir -p "public/pool/$COMPONENT/m/mullvad-vpn"
+          for arch in $ARCHES; do
+            ./repack.sh "$VERSION" "$arch"
+            mv "MullvadVPN-${VERSION}_${arch}_repack.deb" \
+               "public/pool/$COMPONENT/m/mullvad-vpn/mullvad-vpn_${VERSION}+devuan1_${arch}.deb"
+          done
+          ls -lh "public/pool/$COMPONENT/m/mullvad-vpn"
+
+      - name: Generate Packages and Release
+        working-directory: public
+        run: |
+          set -euo pipefail
+          for arch in $ARCHES; do
+            mkdir -p "dists/$SUITE/$COMPONENT/binary-$arch"
+            apt-ftparchive --arch "$arch" packages pool \
+              > "dists/$SUITE/$COMPONENT/binary-$arch/Packages"
+            gzip -9kf "dists/$SUITE/$COMPONENT/binary-$arch/Packages"
+          done
+
+          # Note: no Valid-Until, so apt won't start rejecting the repo if a
+          # scheduled run is ever missed.
+          apt-ftparchive \
+            -o APT::FTPArchive::Release::Origin="$ORIGIN" \
+            -o APT::FTPArchive::Release::Label="$ORIGIN" \
+            -o APT::FTPArchive::Release::Suite="$SUITE" \
+            -o APT::FTPArchive::Release::Codename="$SUITE" \
+            -o APT::FTPArchive::Release::Components="$COMPONENT" \
+            -o APT::FTPArchive::Release::Architectures="$ARCHES" \
+            -o APT::FTPArchive::Release::Description="Mullvad VPN repacked for sysvinit / OpenRC / runit" \
+            release "dists/$SUITE" > "dists/$SUITE/Release"
+
+          cat "dists/$SUITE/Release"
+
+      - name: Sign Release and export public key
+        working-directory: public
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          GNUPGHOME=$(mktemp -d)
+          export GNUPGHOME
+          chmod 700 "$GNUPGHOME"
+
+          printf '%s' "$GPG_PRIVATE_KEY" | base64 -d | gpg --batch --quiet --import
+          keyid=$(gpg --list-secret-keys --with-colons | awk -F: '/^sec:/{print $5; exit}')
+
+          gpg --batch --yes --default-key "$keyid" --armor --detach-sign \
+              --output "dists/$SUITE/Release.gpg" "dists/$SUITE/Release"
+          gpg --batch --yes --default-key "$keyid" --clearsign \
+              --output "dists/$SUITE/InRelease" "dists/$SUITE/Release"
+
+          # Publish the public half of the same key, so there's only one secret
+          # to rotate and the two can never drift apart.
+          gpg --batch --armor --export "$keyid" > KEY.asc
+
+          rm -rf "$GNUPGHOME"
+
+      - name: Write a landing page
+        working-directory: public
+        run: |
+          cat > index.html <<EOF
+          <!doctype html>
+          <meta charset="utf-8">
+          <title>mullvad-repack apt repository</title>
+          <h1>mullvad-repack</h1>
+          <p>Mullvad VPN ${VERSION}, repacked with sysvinit/OpenRC/runit scripts
+          in place of systemd units.</p>
+          <pre>
+          sudo curl -fsSLo /usr/share/keyrings/mullvad-repack.asc $PAGES_URL/KEY.asc
+          echo "deb [signed-by=/usr/share/keyrings/mullvad-repack.asc] $PAGES_URL $SUITE $COMPONENT" \\
+            | sudo tee /etc/apt/sources.list.d/mullvad-repack.list
+          sudo apt update &amp;&amp; sudo apt install mullvad-vpn
+          </pre>
+          EOF
+
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: public
+      - id: deploy
+        uses: actions/deploy-pages@v4
