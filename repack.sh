@@ -45,4 +45,6 @@ patch -l repack/DEBIAN/preinst preinst.patch
 patch -l repack/DEBIAN/postinst postinst.patch
 patch -l repack/DEBIAN/prerm prerm.patch
 
+sed -i "s/^Version: .*/&+devuan1/" repack/DEBIAN/control
+
 dpkg-deb --root-owner-group --build repack "${file%".deb"}_repack.deb"
