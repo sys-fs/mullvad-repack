@@ -57,7 +57,11 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
           url="$PAGES_URL/pool/$COMPONENT/m/mullvad-vpn/mullvad-vpn_${version}+devuan1_amd64.deb"
-          if [ "$FORCE" != "true" ] && curl -fsI "$url" >/dev/null 2>&1; then
+
+          if [[ $version == android/* ]] || [[ $version == *-beta* ]]; then
+            echo "Not a stable desktop release; nothing to do."
+            echo "build=false" >> "$GITHUB_OUTPUT"
+          elif [ "$FORCE" != "true" ] && curl -fsI "$url" >/dev/null 2>&1; then
             echo "Already published; nothing to do."
             echo "build=false" >> "$GITHUB_OUTPUT"
           else
